@@ -1,4 +1,6 @@
 # bobs-corn-pern
+This repository is to create a nice site so our favorite farmer, Bob, can sell his corn all around the world.
+
 ## Instructions
 Based on the following requirements make the Technical Assessment.
 The stack that you are going to use is PERN (Postgre, Express, React and Node).
