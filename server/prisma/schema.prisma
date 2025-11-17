@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  ipAddress String    @unique @map("ip_address") @db.VarChar(45)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  purchases Purchase[]
+
+  @@index([ipAddress], map: "idx_users_ip_address")
+  @@map("users")
+}
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  purchasedAt DateTime @default(now()) @map("purchased_at")
+  quantity    Int      @default(1)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_purchases_user_id")
+  @@index([purchasedAt], map: "idx_purchases_purchased_at")
+  @@map("purchases")
+}
