@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import isDocker from 'is-docker';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Badge } from './ui/badge';
 
 interface Purchase {
     id: number;
@@ -72,33 +75,53 @@ function PurchaseHistory() {
     };
 
     return (
-        <div style={{ marginTop: '2rem', maxWidth: '800px', margin: '2rem auto' }}>
-            <h2>Purchase History</h2>
-            {purchases.length === 0 ? (
-                <p>No purchases yet. Be the first to buy corn! 🌽</p>
-            ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f0f0f0' }}>
-                            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd' }}>ID</th>
-                            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd' }}>IP Address</th>
-                            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd' }}>Quantity</th>
-                            <th style={{ padding: '0.75rem', textAlign: 'left', border: '1px solid #ddd' }}>Purchased At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {purchases.map((purchase) => (
-                            <tr key={purchase.id} style={{ backgroundColor: purchase.id === purchases[0]?.id ? '#e8f5e9' : 'white' }}>
-                                <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{purchase.id}</td>
-                                <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{maskIpAddress(purchase.ipAddress)}</td>
-                                <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{purchase.quantity}</td>
-                                <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{formatDate(purchase.purchasedAt)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-        </div>
+        <Card className="w-full max-w-4xl mx-auto mt-8">
+            <CardHeader>
+                <CardTitle>Purchase History</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {purchases.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                        <p className="text-lg">No purchases yet. Be the first to buy corn! 🌽</p>
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ID</TableHead>
+                                <TableHead>IP Address</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Purchased At</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {purchases.map((purchase) => (
+                                <TableRow 
+                                    key={purchase.id} 
+                                    className={purchase.id === purchases[0]?.id ? 'bg-green-50 dark:bg-green-950/20' : ''}
+                                >
+                                    <TableCell className="font-medium">
+                                        {purchase.id === purchases[0]?.id && (
+                                            <Badge variant="secondary" className="mr-2">New</Badge>
+                                        )}
+                                        {purchase.id}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm">
+                                        {maskIpAddress(purchase.ipAddress)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">{purchase.quantity}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {formatDate(purchase.purchasedAt)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 
