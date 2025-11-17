@@ -30,6 +30,35 @@ Task at hand
 Do a challenge that reflects your thinking and decision making skills so we can understand your seniority.
 ```
 
+## Environment configuration
+> **Note:** Checking `.env` files into source control (or documenting them publicly) is normally discouraged. They are included here only so reviewers can run the project without extra setup.
+
+The project expects two `.env` files:
+
+1. **Root `.env`** (same level as `docker-compose.yml`). Docker Compose reads this file to substitute `${VAR}` expressions before the services start.
+
+```
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=mydb
+PORT=5000
+```
+
+2. **`server/.env`**. Loaded by the Node/Express app during local development (Prisma, `pnpm dev`, etc.) and injected into the server and database services via the `env_file` entries in `docker-compose.yml`.
+
+```
+# Database connection string for local development
+DATABASE_URL="postgres://postgres:postgres@localhost:5432/mydb"
+
+# Database configuration for Docker Compose
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=mydb
+
+# Server configuration
+PORT=5000
+```
+
 ## How do I run it? 
 - Open Terminal and run `docker-compose up --build`. And wait all services to be up and running.
 Services will be exposed in the following ports: (URL: `http://localhost:${PORT}`)

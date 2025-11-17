@@ -15,17 +15,15 @@ const host = isDocker() ? 'express-api' : 'localhost';
 app.set('trust proxy', true);
 
 app.use(cors({
-    origin: "http://localhost:5173", //allow cors coming from frontend
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
 }));
 
 app.use(express.json());
 app.use("/", cornRoutes);
 
-// Initialize Socket.io
 initializeSocket(httpServer);
 
-// Initialize database and start server
 async function startServer() {
     try {
         await initializeDatabase();
