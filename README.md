@@ -1,4 +1,6 @@
 # bobs-corn-pern
+This repository is to create a nice site so our favorite farmer, Bob, can sell his corn all around the world.
+
 ## Instructions
 Based on the following requirements make the Technical Assessment.
 The stack that you are going to use is PERN (Postgre, Express, React and Node).
@@ -27,3 +29,13 @@ Task at hand
 
 Do a challenge that reflects your thinking and decision making skills so we can understand your seniority.
 ```
+
+## How do I run it? 
+- Open Terminal and run `docker-compose up --build`. And wait all services to be up and running.
+Services will be exposed in the following ports: (URL: `http://localhost:${PORT}`)
+  - Frontend (React): 5173 
+  - Database: 5432
+  - Backend (Node/Express): 3000
+  
+## Known issues (TODO)
+- Purchase history table doesn't appear at first load. Yo have to refresh the page so the websocket connection is done and then it appears.

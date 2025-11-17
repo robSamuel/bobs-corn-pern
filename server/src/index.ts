@@ -1,20 +1,39 @@
-import express, {json} from 'express';
-import { cornLimiter } from '../rateLimiter';
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import cornRoutes from "./routes/corn.routes";
+import isDocker from "is-docker";
+import { initializeDatabase } from "./db/init";
+import { initializeSocket } from "./socket";
 
-const PORT = 5000;
+const PORT = 3000;
 const app = express();
+const httpServer = createServer(app);
+const host = isDocker() ? 'express-api' : 'localhost';
+
+// Trust proxy for accurate IP addresses in Docker/behind proxies
+app.set('trust proxy', true);
+
+app.use(cors({
+    origin: "http://localhost:5173", //allow cors coming from frontend
+    methods: ["GET", "POST"],
+}));
 
 app.use(express.json());
+app.use("/", cornRoutes);
 
-app.post('/buy', cornLimiter, (req, res) => {
-    return res
-        .status(200)
-        .json({
-            message: "You successfully bought corn!"
-        });
-  }
-);
+// Initialize Socket.io
+initializeSocket(httpServer);
 
+// Initialize database and start server
+async function startServer() {
+    try {
+        await initializeDatabase();
+        httpServer.listen(PORT, () => console.log(`Backend ready as ${host} in port: ${PORT}`));
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
 
-
-app.listen(PORT, () => console.log(`Backend ready on port: ${PORT}`));
+startServer();
