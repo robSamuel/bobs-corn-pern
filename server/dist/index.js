@@ -14,17 +14,17 @@ const PORT = 3000;
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const host = (0, is_docker_1.default)() ? 'express-api' : 'localhost';
-// Trust proxy for accurate IP addresses in Docker/behind proxies
+
 app.set('trust proxy', true);
 app.use((0, cors_1.default)({
-    origin: "http://localhost:5173", //allow cors coming from frontend
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
 }));
 app.use(express_1.default.json());
 app.use("/", corn_routes_1.default);
-// Initialize Socket.io
+
 (0, socket_1.initializeSocket)(httpServer);
-// Initialize database and start server
+
 async function startServer() {
     try {
         await (0, init_1.initializeDatabase)();

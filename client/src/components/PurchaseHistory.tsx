@@ -21,7 +21,6 @@ function PurchaseHistory() {
     const [purchases, setPurchases] = useState<Purchase[]>([]);
 
     useEffect(() => {
-        // Fetch initial purchase history
         const fetchPurchases = async () => {
             try {
                 const response = await fetch(`${backendUrl}/purchases/all`);
@@ -36,7 +35,6 @@ function PurchaseHistory() {
 
         fetchPurchases();
 
-        // Connect to WebSocket
         const socket = io(socketUrl, {
             transports: ['websocket', 'polling']
         });
@@ -49,12 +47,10 @@ function PurchaseHistory() {
             console.log('Disconnected from WebSocket server');
         });
 
-        // Listen for new purchases
         socket.on('newPurchase', (purchase: Purchase) => {
             setPurchases((prev) => [purchase, ...prev].slice(0, 100)); // Keep last 100 purchases
         });
 
-        // Cleanup on unmount
         return () => {
             socket.close();
         };
