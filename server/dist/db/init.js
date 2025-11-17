@@ -1,30 +1,23 @@
-import prisma from './connection';
-
-// Type for purchase with user relation
-type PurchaseWithUser = {
-    id: number;
-    userId: number;
-    purchasedAt: Date;
-    quantity: number;
-    user: {
-        ipAddress: string;
-    };
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-
-export type AllPurchasesResult = {
-    id: number;
-    user_id: number;
-    ip_address: string;
-    quantity: number;
-    purchased_at: Date;
-};
-
-async function waitForDatabase(maxRetries: number = 10, delayMs: number = 2000): Promise<void> {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initializeDatabase = initializeDatabase;
+exports.getUserByIp = getUserByIp;
+exports.createUser = createUser;
+exports.createPurchase = createPurchase;
+exports.getUserPurchases = getUserPurchases;
+exports.getAllPurchases = getAllPurchases;
+exports.getUserPurchaseStats = getUserPurchaseStats;
+const connection_1 = __importDefault(require("./connection"));
+async function waitForDatabase(maxRetries = 10, delayMs = 2000) {
     for (let i = 0; i < maxRetries; i++) {
         try {
-            await prisma.$queryRaw`SELECT 1`;
+            await connection_1.default.$queryRaw `SELECT 1`;
             return;
-        } catch (error) {
+        }
+        catch (error) {
             if (i === maxRetries - 1) {
                 throw error;
             }
@@ -33,16 +26,14 @@ async function waitForDatabase(maxRetries: number = 10, delayMs: number = 2000):
         }
     }
 }
-
-export async function initializeDatabase() {
+async function initializeDatabase() {
     try {
         await waitForDatabase();
         console.log('Database connected successfully');
-
         // For existing databases, ensure schema exists using raw SQL
         // In production, use Prisma migrations: npx prisma migrate deploy
         // For new databases, run: npx prisma migrate dev --name init
-        await prisma.$executeRawUnsafe(`
+        await connection_1.default.$executeRawUnsafe(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 ip_address VARCHAR(45) NOT NULL UNIQUE,
@@ -50,8 +41,7 @@ export async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
-        await prisma.$executeRawUnsafe(`
+        await connection_1.default.$executeRawUnsafe(`
             CREATE TABLE IF NOT EXISTS purchases (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -59,80 +49,76 @@ export async function initializeDatabase() {
                 quantity INTEGER DEFAULT 1
             )
         `);
-        
-        await prisma.$executeRawUnsafe(`
+        await connection_1.default.$executeRawUnsafe(`
             CREATE INDEX IF NOT EXISTS idx_purchases_user_id ON purchases(user_id)
         `);
-        
-        await prisma.$executeRawUnsafe(`
+        await connection_1.default.$executeRawUnsafe(`
             CREATE INDEX IF NOT EXISTS idx_purchases_purchased_at ON purchases(purchased_at)
         `);
-        
-        await prisma.$executeRawUnsafe(`
+        await connection_1.default.$executeRawUnsafe(`
             CREATE INDEX IF NOT EXISTS idx_users_ip_address ON users(ip_address)
         `);
-        
         console.log('Database schema initialized successfully');
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error initializing database:', error);
         throw error;
     }
 }
-
-export async function getUserByIp(ipAddress: string) {
+async function getUserByIp(ipAddress) {
     try {
-        return await prisma.user.findUnique({
+        return await connection_1.default.user.findUnique({
             where: { ipAddress }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting user by IP:', error);
         throw error;
     }
 }
-
-export async function createUser(ipAddress: string) {
+async function createUser(ipAddress) {
     try {
-        return await prisma.user.upsert({
+        return await connection_1.default.user.upsert({
             where: { ipAddress },
             update: { updatedAt: new Date() },
             create: { ipAddress }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error creating user:', error);
         throw error;
     }
 }
-
-export async function createPurchase(userId: number, quantity: number = 1) {
+async function createPurchase(userId, quantity = 1) {
     try {
-        return await prisma.purchase.create({
+        return await connection_1.default.purchase.create({
             data: {
                 userId,
                 quantity
             }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error creating purchase:', error);
         throw error;
     }
 }
-
-export async function getUserPurchases(userId: number, limit: number = 10) {
+async function getUserPurchases(userId, limit = 10) {
     try {
-        return await prisma.purchase.findMany({
+        return await connection_1.default.purchase.findMany({
             where: { userId },
             orderBy: { purchasedAt: 'desc' },
             take: limit
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting user purchases:', error);
         throw error;
     }
 }
-
-export async function getAllPurchases(limit: number = 50): Promise<AllPurchasesResult[]> {
+async function getAllPurchases(limit = 50) {
     try {
-        const purchases = await prisma.purchase.findMany({
+        const purchases = await connection_1.default.purchase.findMany({
             include: {
                 user: {
                     select: {
@@ -143,52 +129,50 @@ export async function getAllPurchases(limit: number = 50): Promise<AllPurchasesR
             orderBy: { purchasedAt: 'desc' },
             take: limit
         });
-        
         // Transform to match the expected format with ip_address at the root level
-        return purchases.map((p: PurchaseWithUser): AllPurchasesResult => ({
+        return purchases.map((p) => ({
             id: p.id,
             user_id: p.userId,
             ip_address: p.user.ipAddress,
             quantity: p.quantity,
             purchased_at: p.purchasedAt
         }));
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting all purchases:', error);
         throw error;
     }
 }
-
-export async function getUserPurchaseStats(userId: number) {
+async function getUserPurchaseStats(userId) {
     try {
         const [count, sum, min, max] = await Promise.all([
-            prisma.purchase.count({
+            connection_1.default.purchase.count({
                 where: { userId }
             }),
-            prisma.purchase.aggregate({
+            connection_1.default.purchase.aggregate({
                 where: { userId },
                 _sum: { quantity: true }
             }),
-            prisma.purchase.findFirst({
+            connection_1.default.purchase.findFirst({
                 where: { userId },
                 orderBy: { purchasedAt: 'asc' },
                 select: { purchasedAt: true }
             }),
-            prisma.purchase.findFirst({
+            connection_1.default.purchase.findFirst({
                 where: { userId },
                 orderBy: { purchasedAt: 'desc' },
                 select: { purchasedAt: true }
             })
         ]);
-        
         return {
             total_purchases: count.toString(),
             total_quantity: (sum._sum.quantity || 0).toString(),
             first_purchase: min?.purchasedAt || null,
             last_purchase: max?.purchasedAt || null
         };
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting user purchase stats:', error);
         throw error;
     }
 }
-
